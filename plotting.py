@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from scipy import stats
-
+import stats as stat
 
 def BkgSigHistos (background, signals, data, variable_binning,x_label,savepath=None) :
     
@@ -29,10 +29,10 @@ def BkgSigHistos (background, signals, data, variable_binning,x_label,savepath=N
         
         ax.errorbar(x=binning[:-1]+binw/2.,y=data_hist[i], xerr=binw/2., yerr=np.sqrt(data_hist[i]),
                     fmt='o', color='k',label='data',linewidth=1)
-        ax.legend()
-        ax.set_ylabel('Events / '+ str(round(binw,1))+' '+x_unit)
+        ax.legend(fontsize=14)
+        ax.set_ylabel('Events / '+ str(round(binw,1))+' '+x_unit,fontsize=14)
         if (i == 2) :
-            ax.set_xlabel(x_name+' ['+x_unit+']')
+            ax.set_xlabel(x_name+' ['+x_unit+']',fontsize=14)
         plt.tight_layout()
 
     fig.subplots_adjust(hspace=0)
@@ -58,15 +58,18 @@ def LogLikRatioPlots(arrays,obs,Nbins=30,savepath=None) :
     QuantileList_b = []
     QuantileList_sPlusb = []
     
+    
     for i in xrange(3) :
         ax = axs[i]
 
         llr_b, llr_sPlusb = arrays[i]
         norm = len(llr_b)
         binning = np.linspace(np.minimum(llr_b,llr_sPlusb).min(),np.maximum(llr_b,llr_sPlusb).max(),Nbins)
+        width = binning[1]-binning[0]
+ 
         
         llr_b_hist = 1.*np.histogram(llr_b,bins=binning)[0]/norm
-        QuantileList_b.append(GetQuantiles(llr_b_hist,binning)) 
+        QuantileList_b.append(stat.GetQuantiles(llr_b_hist,binning)) 
         
         
         pos =  np.where(binning <= obs[i])[0][-1]
@@ -74,7 +77,7 @@ def LogLikRatioPlots(arrays,obs,Nbins=30,savepath=None) :
         OneMinusCLb =  sum(llr_b_hist[:pos]) 
         
         llr_sPlusb_hist = 1.*np.histogram(llr_sPlusb,bins=binning)[0]/norm
-        QuantileList_sPlusb.append(GetQuantiles(llr_sPlusb_hist,binning)) 
+        QuantileList_sPlusb.append(stat.GetQuantiles(llr_sPlusb_hist,binning)) 
         
         CLsPlusb =  sum(llr_sPlusb_hist[pos:])
         CLlist.append([OneMinusCLb, CLsPlusb])
@@ -88,11 +91,15 @@ def LogLikRatioPlots(arrays,obs,Nbins=30,savepath=None) :
         #ax.fill_between(x1,llr_b_hist[:len(x1)],color='red',alpha=0.5,interpolate=True)
         #ax.fill_between(x2,llr_sPlusb_hist[-len(x2):],color='blue',alpha=0.5,interpolate=True)
         
-        ax.set_xlabel(r'$-2 \ln (Q)$')
-        ax.set_ylabel('p.d.f.')
+        ax.bar(x2[:-1]-width/2., llr_sPlusb_hist[-len(x2)+1:], width=width, color='blue', alpha=.5)        
+        ax.bar(x1-width/2., llr_b_hist[:len(x1)], width=width, color='red', alpha=.5)
+        
+        
+        ax.set_xlabel(r'$-2 \ln (Q)$',fontsize=14)
+        ax.set_ylabel('p.d.f.',fontsize=14)
         ax.set_title('signal model ' + r'($m_\mathrm{H} = $'+str(m_H[i])+' GeV)')
         ax.axvline(obs[i],label='observed',color='k')
-        ax.legend()
+        ax.legend(fontsize=14)
     
     plt.tight_layout()
     if (savepath != None) :
@@ -107,25 +114,6 @@ def LogLikRatioPlots(arrays,obs,Nbins=30,savepath=None) :
 
 
 
-def GetQuantiles (hist,binning) :
-    # note that the histogram must be normalized
-    cumulative = np.cumsum(hist)
-    
-    twoSigmaLeft = 0.023
-    oneSigmaLeft = 0.16
-    median = 0.5
-    oneSigmaRight = 1.-0.16  
-    twoSigmaRight = 1.-0.023
-    
-    
-    TwoSigmaLeft = binning[np.where(cumulative <= twoSigmaLeft)[0][-1]] 
-    OneSigmaLeft = binning[np.where(cumulative <= oneSigmaLeft)[0][-1]] 
-    Median = binning[np.where(cumulative <= median)[0][-1]]
-    OneSigmaRight = binning[np.where(cumulative < oneSigmaRight)[0][-1]]  
-    TwoSigmaRight = binning[np.where(cumulative < twoSigmaRight)[0][-1]] 
-    
-        
-    return [Median,[OneSigmaLeft,OneSigmaRight],[TwoSigmaLeft,TwoSigmaRight]]
 
 
 """

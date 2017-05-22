@@ -33,3 +33,23 @@ def LogLikRatioObserved (background, signals, data) :
    
     
     return llr_data_is_b_like
+
+def GetQuantiles (hist,binning) :
+    # note that the histogram must be normalized
+    cumulative = np.cumsum(hist)
+    
+    twoSigmaLeft = 0.023
+    oneSigmaLeft = 0.16
+    median = 0.5
+    oneSigmaRight = 1.-0.16  
+    twoSigmaRight = 1.-0.023
+    
+    
+    TwoSigmaLeft = binning[np.where(cumulative <= twoSigmaLeft)[0][-1]] 
+    OneSigmaLeft = binning[np.where(cumulative <= oneSigmaLeft)[0][-1]] 
+    Median = binning[np.where(cumulative <= median)[0][-1]]
+    OneSigmaRight = binning[np.where(cumulative < oneSigmaRight)[0][-1]]  
+    TwoSigmaRight = binning[np.where(cumulative < twoSigmaRight)[0][-1]] 
+    
+        
+    return [Median,[OneSigmaLeft,OneSigmaRight],[TwoSigmaLeft,TwoSigmaRight]]
